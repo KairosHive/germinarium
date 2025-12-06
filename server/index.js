@@ -35,6 +35,11 @@ async function initDB() {
 
 // Routes
 
+// Health check
+app.get('/', (req, res) => {
+    res.json({ status: 'ok', message: 'Germinarium API is running' });
+});
+
 // Login/Register - just provide username, creates if doesn't exist
 app.post('/api/login', async (req, res) => {
     const { username } = req.body;
