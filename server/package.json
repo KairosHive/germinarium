@@ -1,0 +1,15 @@
+{
+  "name": "apothecary-server",
+  "version": "1.0.0",
+  "description": "Backend for The Celestial Apothecary game",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "pg": "^8.11.3"
+  }
+}

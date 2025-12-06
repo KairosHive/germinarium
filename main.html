@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Celestial Apothecary</title>
+    <style>
+        /* --- THE AESTHETIC --- */
+        :root {
+            --void-bg: #fdfbf7;
+            --nebula-glow: #e6e6fa;
+            --gold-text: #5a5a5a;
+            --accent-color: #d4af37;
+            --glass-border: rgba(0, 0, 0, 0.05);
+            --font-main: 'Georgia', serif;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--void-bg);
+            background-image: 
+                radial-gradient(circle at 20% 30%, var(--nebula-glow) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, #ffe4e1 0%, transparent 40%);
+            color: var(--gold-text);
+            font-family: var(--font-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* --- THE SIDEBAR (Your Collection) --- */
+        .apothecary-shelf {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.7);
+            border-right: 1px solid var(--glass-border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            backdrop-filter: blur(10px);
+            z-index: 10;
+            overflow-y: auto;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.02);
+        }
+
+        .shelf-title {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+            color: var(--accent-color);
+        }
+
+        .level-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .filter-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .filter-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            color: var(--accent-color);
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 4px;
+            background: rgba(255,255,255,0.8);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 4px;
+            font-family: var(--font-main);
+            color: var(--gold-text);
+            font-size: 0.8rem;
+        }
+
+        .level-selector h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .level-btn {
+            background: transparent;
+            border: 1px solid var(--gold-text);
+            color: var(--gold-text);
+            padding: 10px;
+            cursor: pointer;
+            font-family: var(--font-main);
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            opacity: 0.7;
+        }
+
+        .level-btn:hover {
+            background: rgba(212, 175, 55, 0.1);
+            opacity: 1;
+        }
+
+        .level-btn.active {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
+            opacity: 1;
+        }
+
+        .score-display {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .score-display .score-value {
+            font-size: 2rem;
+            color: var(--accent-color);
+        }
+
+        .potted-plant {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            animation: popIn 0.5s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .pot-icon { font-size: 1.5rem; }
+        .plant-name { font-size: 0.9rem; font-style: italic; }
+
+        /* --- THE VOID (Main Stage) --- */
+        .void-stage {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            cursor: grab;
+            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.8) 0%, transparent 70%); /* Subtle center highlight */
+        }
+
+        .void-stage:active {
+            cursor: grabbing;
+        }
+
+        /* Cluster Mode Dropdown */
+        .cluster-control {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .cluster-control label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-color);
+        }
+
+        .cluster-control select {
+            padding: 6px 12px;
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 4px;
+            font-family: var(--font-main);
+            color: var(--gold-text);
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold-text);
+            transition: all 0.2s;
+        }
+
+        .zoom-btn:hover {
+            background: #fff;
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        #world-container {
+            position: absolute;
+            width: 1500px; /* Significantly reduced for tighter packing */
+            height: 1500px;
+            /* Centered initially via JS */
+            transform-origin: center;
+            transition: transform 0.4s cubic-bezier(0.1, 0.57, 0.1, 1); /* Much smoother physics-like feel */
+        }
+
+        #connection-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: visible;
+        }
+
+        #orb-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+        .family-root {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid var(--gold-text);
+            color: var(--gold-text);
+            font-weight: bold;
+            font-size: 0.8rem;
+            text-align: center;
+            z-index: 4;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .family-root:hover {
+            transform: scale(1.1);
+            z-index: 15;
+            background: #fff;
+        }
+
+        /* Cluster Label (prominent text) */
+        .cluster-label {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 250px;
+            height: 80px;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+            user-select: none;
+            font-family: var(--font-main);
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            opacity: 0.6;
+            text-shadow: 0 2px 8px rgba(255,255,255,0.9);
+        }
+
+        /* Plant Nodes (Leaves/Fruits) */
+        .orb {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            /* Earthy, organic gradient */
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.1) 100%);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), inset 0 0 6px rgba(255,255,255,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+            z-index: 5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        
+        .orb:hover { 
+            transform: scale(1.4);
+            z-index: 10;
+            box-shadow: 0 0 12px var(--accent-color);
+        }
+        
+        .orb.collected {
+            background: linear-gradient(135deg, #d4af37 0%, #c9a227 50%, #b8960f 100%) !important;
+            border: 2px solid #a67c00 !important;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5), inset 0 1px 3px rgba(255,255,255,0.4) !important;
+            opacity: 1;
+        }
+        
+        .orb.collected:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.8);
+        }
+
+        .orb-thumbnail {
+            position: fixed;
+            width: 120px;
+            height: 120px;
+            border-radius: 8px;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 2px solid white;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0;
+            transform: scale(0.8) translateY(10px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .orb-thumbnail.visible {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        .orb-thumbnail-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            font-size: 0.7rem;
+            padding: 4px;
+            text-align: center;
+            border-radius: 0 0 6px 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .connection-line {
+            stroke-width: 2px;
+            opacity: 0.4;
+            transition: all 0.5s ease;
+        }
+
+        /* --- CARD OVERLAY (for click-outside-to-close) --- */
+        .card-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.3);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .card-overlay.journal-mode {
+            justify-content: flex-end;
+            padding-right: 40px;
+        }
+
+        /* --- THE INTERFACE CARD --- */
+        .examination-card {
+            width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 40px;
+            padding-top: 50px; /* Extra padding for level indicator */
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            z-index: 101;
+        }
+
+        .card-overlay.journal-mode .examination-card {
+            width: 700px;
+            max-width: calc(100vw - 350px); /* Account for sidebar */
+            height: calc(100vh - 80px);
+            max-height: none;
+            overflow-y: auto;
+        }
+
+        .card-overlay.journal-mode .plant-image {
+            height: 350px;
+        }
+
+        .plant-image {
+            width: 100%;
+            height: 300px;
+            object-fit: contain;
+            border-radius: 8px;
+            filter: sepia(10%) contrast(105%) brightness(105%);
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: rgba(250, 248, 245, 0.5);
+        }
+
+        .level-indicator {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 5px 20px;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .clue-text {
+            font-size: 1.4rem;
+            color: #777;
+            font-style: italic;
+            padding: 15px;
+            background: rgba(240, 240, 245, 0.5);
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .whisper-text {
+            font-style: italic;
+            color: #888;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .input-box {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--gold-text);
+            color: var(--gold-text);
+            padding: 10px;
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .input-box:focus {
+            border-bottom-color: var(--accent-color);
+        }
+
+        .btn-transmute {
+            margin-top: 10px;
+            background: transparent;
+            border: 1px solid #ccc;
+            color: #888;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-family: var(--font-main);
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .btn-transmute:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .btn-skip {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            padding: 8px 15px;
+            font-family: var(--font-main);
+            font-size: 0.8rem;
+            margin-top: 5px;
+            text-decoration: underline;
+        }
+
+        .btn-skip:hover {
+            color: #888;
+        }
+
+        /* Success animation */
+        .success-flash {
+            animation: successPulse 0.5s ease;
+        }
+
+        @keyframes successPulse {
+            0% { box-shadow: 0 0 50px rgba(100,255,100,0.2); }
+            100% { box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Particles */
+        .particle {
+            position: absolute;
+            background: var(--accent-color);
+            border-radius: 50%;
+            opacity: 0.2;
+            animation: drift 20s infinite linear;
+        }
+
+        /* Start screen */
+        .start-message {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+        }
+
+        .start-message h2 {
+            font-weight: normal;
+            letter-spacing: 3px;
+            color: var(--accent-color);
+        }
+
+        /* Login Modal */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .login-modal {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 350px;
+        }
+
+        .login-modal h2 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+
+        .login-modal p {
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .login-modal input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        .login-modal button {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .login-modal button:hover {
+            background: #c9a227;
+        }
+
+        .login-modal .guest-btn {
+            background: transparent;
+            color: #888;
+            border: 1px dashed #ccc;
+        }
+
+        .user-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(212, 175, 55, 0.1);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+        }
+
+        .user-display .username {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .user-display .logout-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-decoration: underline;
+        }
+
+        .sync-status {
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Modal -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-modal">
+            <h2>✧ Welcome ✧</h2>
+            <p>Enter your username to sync progress across devices</p>
+            <input type="text" id="username-input" placeholder="Choose a username..." maxlength="50" autocomplete="off">
+            <button onclick="loginUser()">Enter the Apothecary</button>
+            <button class="guest-btn" onclick="playAsGuest()">Continue as Guest</button>
+        </div>
+    </div>
+
+    <div class="apothecary-shelf">
+        <div class="shelf-title">The Celestial Apothecary</div>
+        
+        <div class="user-display" id="user-display" style="display: none;">
+            <div>
+                <span class="username" id="display-username">Guest</span>
+                <div class="sync-status" id="sync-status">Local only</div>
+            </div>
+            <button class="logout-btn" onclick="logoutUser()">Switch</button>
+        </div>
+        
+        <div class="level-selector">
+            <h3>Choose Your Trial</h3>
+            <button class="level-btn active" onclick="setLevel(1)">
+                Level 1: Latin → Common
+            </button>
+            <button class="level-btn" onclick="setLevel(2)">
+                Level 2: Common → Latin
+            </button>
+            <button class="level-btn" onclick="setLevel(3)">
+                Level 3: Etymology Riddle
+            </button>
+        </div>
+
+        <div class="filter-panel">
+            <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-bottom: 5px; color: var(--accent-color);">Filters</div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Family</label>
+                <select id="filter-family" class="filter-select" onchange="updateFilter('family', this.value)">
+                    <option value="All">All Families</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Habitat</label>
+                <select id="filter-habitat" class="filter-select" onchange="updateFilter('habitat', this.value)">
+                    <option value="All">All Habitats</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Action</label>
+                <select id="filter-action" class="filter-select" onchange="updateFilter('action', this.value)">
+                    <option value="All">All Actions</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Temperature</label>
+                <select id="filter-temp" class="filter-select" onchange="updateFilter('temp', this.value)">
+                    <option value="All">All Temps</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Moisture</label>
+                <select id="filter-moist" class="filter-select" onchange="updateFilter('moist', this.value)">
+                    <option value="All">All Moisture</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Element</label>
+                <select id="filter-element" class="filter-select" onchange="updateFilter('element', this.value)">
+                    <option value="All">All Elements</option>
+                </select>
+            </div>
+            
+            <button onclick="clearFilters()" style="margin-top: 5px; background: transparent; border: 1px dashed #aaa; cursor: pointer; font-size: 0.7rem; padding: 4px; opacity: 0.6;">Clear Filters</button>
+        </div>
+
+        <div class="score-display">
+            <div style="font-size: 0.8rem; opacity: 0.7;">Specimens Collected</div>
+            <div class="score-value" id="score">0</div>
+        </div>
+
+        <div class="shelf-title" style="margin-top: 10px;">Specimen Collection</div>
+        <div id="shelf-container"></div>
+    </div>
+
+    <div class="void-stage" id="void-stage">
+        <div class="cluster-control">
+            <label>Cluster by:</label>
+            <select id="cluster-mode" onchange="setClusterMode(this.value)">
+                <option value="family">Family</option>
+                <option value="habitat">Habitat</option>
+                <option value="action">Action</option>
+                <option value="element">Element</option>
+                <option value="temperature">Temperature</option>
+                <option value="moisture">Moisture</option>
+            </select>
+            <button onclick="fitToScreen()" style="padding: 6px 12px; background: transparent; border: 1px solid var(--accent-color); color: var(--accent-color); border-radius: 4px; cursor: pointer; font-family: var(--font-main); font-size: 0.8rem;">Fit All</button>
+        </div>
+
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoomIn()">+</button>
+            <button class="zoom-btn" onclick="zoomOut()">−</button>
+            <button class="zoom-btn" onclick="fitToScreen()" style="font-size: 0.8rem;">⊙</button>
+        </div>
+
+        <div id="world-container">
+            <svg id="connection-layer"></svg>
+            <div id="orb-container"></div>
+        </div>
+
+        <div class="particle" style="width: 4px; height: 4px; top: 10%; left: 50%;"></div>
+        <div class="particle" style="width: 6px; height: 6px; top: 80%; left: 20%;"></div>
+        <div class="particle" style="width: 3px; height: 3px; top: 40%; left: 85%;"></div>
+        <div class="particle" style="width: 5px; height: 5px; top: 70%; left: 40%;"></div>
+
+        <div class="start-message" id="start-message">
+            <h2>✧ Click an orb to begin your examination ✧</h2>
+            <p>Identify the specimens to add them to your collection</p>
+        </div>
+    </div>
+
+    <!-- Orb hover thumbnail -->
+    <div class="orb-thumbnail" id="orb-thumbnail"></div>
+
+    <div class="card-overlay" id="card-overlay" onclick="handleOverlayClick(event)">
+        <div class="examination-card" id="exam-card">
+            <div class="level-indicator" id="level-indicator">Level 1</div>
+            <img src="" alt="Plant Specimen" class="plant-image" id="card-image">
+        
+        <div id="game-interface">
+            <div class="clue-text" id="clue-text"></div>
+            <div class="whisper-text" id="ai-hint"></div>
+            <input type="text" class="input-box" id="guess-input" placeholder="Name the essence..." autocomplete="off">
+            <button class="btn-transmute" onclick="checkGuess()">Transmute</button>
+            <button class="btn-skip" onclick="skipPlant()">Skip this specimen</button>
+        </div>
+
+            <div id="collection-info" style="display: none; text-align: left; color: var(--gold-text); margin-top: 15px;">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script src="plants.js"></script>
+    <script>
+        // --- API CONFIGURATION ---
+        // Change this to your Railway URL after deployment
+        const API_URL = localStorage.getItem('apothecary_api_url') || '';
+        
+        // --- USER STATE ---
+        let currentUser = null; // { username: 'alex' } or null for guest
+        
+        // --- GAME STATE ---
+        let currentLevel = 1;
+        let currentPlant = null;
+        let clusterMode = 'family'; // family, habitat, action, element, temperature, moisture
+        
+        let activeFilters = {
+            family: 'All',
+            habitat: 'All',
+            action: 'All',
+            temp: 'All',
+            moist: 'All',
+            element: 'All'
+        };
+        
+        // State per level
+        let levelState = {
+            1: { collected: new Set(), score: 0 },
+            2: { collected: new Set(), score: 0 },
+            3: { collected: new Set(), score: 0 }
+        };
+        
+        let currentOrbs = [];
+        let currentBatch = []; // Stores the current set of plants in the void
+
+        // --- USER/SYNC FUNCTIONS ---
+        async function loginUser() {
+            const usernameInput = document.getElementById('username-input');
+            const username = usernameInput.value.trim().toLowerCase();
+            
+            if (username.length < 2) {
+                alert('Username must be at least 2 characters');
+                return;
+            }
+            
+            // Try to sync with server if API_URL is set
+            if (API_URL) {
+                try {
+                    const response = await fetch(`${API_URL}/api/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentUser = { username: data.username };
+                        loadProgressFromServer(data.progress);
+                        updateSyncStatus('Synced ✓');
+                    } else {
+                        throw new Error('Server error');
+                    }
+                } catch (err) {
+                    console.log('Server unavailable, using local storage');
+                    currentUser = { username };
+                    loadProgressFromLocal(username);
+                    updateSyncStatus('Local only');
+                }
+            } else {
+                // No server configured, use local storage
+                currentUser = { username };
+                loadProgressFromLocal(username);
+                updateSyncStatus('Local only');
+            }
+            
+            // Save username for next visit
+            localStorage.setItem('apothecary_username', username);
+            
+            // Update UI
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('user-display').style.display = 'flex';
+            document.getElementById('display-username').textContent = username;
+            
+            // Start game
+            init();
+            setTimeout(fitToScreen, 100);
+        }
+        
+        function playAsGuest() {
+            currentUser = null;
+            loadProgressFromLocal('guest');
+            
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('user-display').style.display = 'flex';
+            document.getElementById('display-username').textContent = 'Guest';
+            updateSyncStatus('Local only');
+            
+            init();
+            setTimeout(fitToScreen, 100);
+        }
+        
+        function logoutUser() {
+            // Save current progress first
+            saveProgress();
+            
+            // Reset state
+            currentUser = null;
+            levelState = {
+                1: { collected: new Set(), score: 0 },
+                2: { collected: new Set(), score: 0 },
+                3: { collected: new Set(), score: 0 }
+            };
+            
+            // Show login
+            document.getElementById('login-overlay').style.display = 'flex';
+            document.getElementById('user-display').style.display = 'none';
+            document.getElementById('username-input').value = '';
+        }
+        
+        function loadProgressFromServer(progress) {
+            // Convert arrays back to Sets
+            for (let level in progress) {
+                if (progress[level].collected) {
+                    levelState[level] = {
+                        collected: new Set(progress[level].collected),
+                        score: progress[level].score || 0
+                    };
+                }
+            }
+        }
+        
+        function loadProgressFromLocal(username) {
+            const key = `apothecary_progress_${username}`;
+            const saved = localStorage.getItem(key);
+            
+            if (saved) {
+                try {
+                    const progress = JSON.parse(saved);
+                    loadProgressFromServer(progress);
+                } catch (e) {
+                    console.error('Failed to load local progress:', e);
+                }
+            }
+        }
+        
+        async function saveProgress() {
+            const username = currentUser?.username || 'guest';
+            
+            // Convert Sets to arrays for JSON
+            const progressData = {};
+            for (let level in levelState) {
+                progressData[level] = {
+                    collected: Array.from(levelState[level].collected),
+                    score: levelState[level].score
+                };
+            }
+            
+            // Always save locally
+            const key = `apothecary_progress_${username}`;
+            localStorage.setItem(key, JSON.stringify(progressData));
+            
+            // Try to sync to server if logged in and API available
+            if (currentUser && API_URL) {
+                try {
+                    await fetch(`${API_URL}/api/save`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, progress: progressData })
+                    });
+                    updateSyncStatus('Synced ✓');
+                } catch (err) {
+                    updateSyncStatus('Sync failed');
+                }
+            }
+        }
+        
+        function updateSyncStatus(status) {
+            document.getElementById('sync-status').textContent = status;
+        }
+        
+        // Auto-check for saved username on page load
+        function checkSavedLogin() {
+            const savedUsername = localStorage.getItem('apothecary_username');
+            if (savedUsername) {
+                document.getElementById('username-input').value = savedUsername;
+            }
+        }
+        
+        // Call on page load
+        checkSavedLogin();
+
+        // --- THUMBNAIL PREVIEW ---
+        function showOrbThumbnail(plant, orbElement) {
+            const thumbnail = document.getElementById('orb-thumbnail');
+            
+            // Set image - try local first, then fallback
+            const img = new Image();
+            img.onload = () => {
+                thumbnail.style.backgroundImage = `url('${img.src}')`;
+            };
+            img.onerror = () => {
+                thumbnail.style.backgroundImage = `url('${plant.image}')`;
+            };
+            img.src = `images_database/${plant.id}/main.jpg`;
+            
+            // Position near the orb
+            const orbRect = orbElement.getBoundingClientRect();
+            let left = orbRect.right + 10;
+            let top = orbRect.top - 40;
+            
+            // Keep within viewport
+            if (left + 130 > window.innerWidth) {
+                left = orbRect.left - 130;
+            }
+            if (top < 10) top = 10;
+            if (top + 130 > window.innerHeight) {
+                top = window.innerHeight - 140;
+            }
+            
+            thumbnail.style.left = left + 'px';
+            thumbnail.style.top = top + 'px';
+            thumbnail.classList.add('visible');
+        }
+
+        function hideOrbThumbnail() {
+            const thumbnail = document.getElementById('orb-thumbnail');
+            thumbnail.classList.remove('visible');
+        }
+
+        // --- LEVEL DEFINITIONS ---
+        const levels = {
+            1: {
+                name: "Latin → Common",
+                description: "Given the Latin name, identify the common name",
+                getClue: (plant) => {
+                    if (plant.latinBreakdown && plant.latinBreakdown.length > 0) {
+                        const breakdownHtml = plant.latinBreakdown.map(item => 
+                            `<div><b>${item.word}</b>: ${item.meaning}</div>`
+                        ).join('');
+                        
+                        return `
+                            <div style="margin-bottom: 10px; font-size: 1.2rem; color: var(--accent-color);"><em>${plant.latinName}</em></div>
+                            <div style="font-size: 0.9rem; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                                ${breakdownHtml}
+                            </div>
+                        `;
+                    }
+                    return `<em>${plant.latinName}</em>`;
+                },
+                getHint: (plant) => `Hint: ${plant.commonNameHint || plant.etymology || "No hint available."}`,
+                getAnswer: (plant) => [plant.commonName, plant.commonName_FR, plant.commonName_ES].filter(Boolean),
+                placeholder: "Enter the common name (EN/FR/ES)..."
+            },
+            2: {
+                name: "Common → Latin",
+                description: "Given the common name, identify the Latin name",
+                getClue: (plant) => {
+                    const names = [
+                        `<span style="font-size: 1.1rem;">🇬🇧 ${plant.commonName}</span>`,
+                        plant.commonName_FR ? `<span style="font-size: 1.1rem;">🇫🇷 ${plant.commonName_FR}</span>` : '',
+                        plant.commonName_ES ? `<span style="font-size: 1.1rem;">🇪🇸 ${plant.commonName_ES}</span>` : ''
+                    ].filter(Boolean).join('<br>');
+                    return `<div style="line-height: 1.8;">${names}</div>`;
+                },
+                getHint: (plant) => {
+                    let hint = `Family: <b>${plant.family}</b>`;
+                    
+                    // Add Latin breakdown meanings as hints
+                    if (plant.latinBreakdown && plant.latinBreakdown.length > 0) {
+                        const meanings = plant.latinBreakdown.map(item => item.meaning).join(' • ');
+                        hint += `<br><br><em style="opacity: 0.8;">Latin hints: ${meanings}</em>`;
+                    }
+                    
+                    return hint;
+                },
+                getAnswer: (plant) => [plant.latinName],
+                placeholder: "Enter the Latin name..."
+            },
+            3: {
+                name: "Etymology Riddle",
+                description: "Solve the riddle based on the plant's etymology",
+                getClue: (plant) => `"${plant.etymology || plant.commonNameHint || "I have no riddle for you."}"`,
+                getHint: (plant) => `Family: <b>${plant.family}</b>`,
+                getAnswer: (plant) => [plant.commonName, plant.commonName_FR, plant.commonName_ES].filter(Boolean),
+                placeholder: "What plant am I? (EN/FR/ES)"
+            }
+        };
+
+        // --- FAMILY THEMES (Earthy Pastel) ---
+        const familyThemes = {
+            // Original Set
+            'Lamiaceae': { color: '#A9B388', icon: '🌿' }, // Sage Green
+            'Asteraceae': { color: '#E0C097', icon: '🌻' }, // Sand Yellow
+            'Araceae': { color: '#7D9D75', icon: '🍃' }, // Moss Green
+            'Asphodelaceae': { color: '#8FB9A8', icon: '🌵' }, // Teal Grey
+            'Ginkgoaceae': { color: '#D9C589', icon: '🍂' }, // Ochre
+            'Plantaginaceae': { color: '#D499B9', icon: '🌸' }, // Mauve
+            'Solanaceae': { color: '#9E8FB2', icon: '🔮' }, // Slate Purple
+            'Caprifoliaceae': { color: '#EBC2AF', icon: '💮' }, // Peach Clay
+            'Myrtaceae': { color: '#8DA399', icon: '🌳' }, // Sage Blue
+            'Oleaceae': { color: '#F2E8C6', icon: '🌼' }, // Cream
+            'Passifloraceae': { color: '#B39BC8', icon: '🌺' }, // Wisteria
+
+            // Extended Set (New Additions)
+            'Hypericaceae': { color: '#F4D03F', icon: '☀️' }, // Sunny Yellow
+            'Boraginaceae': { color: '#76D7C4', icon: '🎋' }, // Soft Teal
+            'Scrophulariaceae': { color: '#F7DC6F', icon: '🕯️' }, // Pale Yellow
+            'Urticaceae': { color: '#58D68D', icon: '🔥' }, // Sharp Green
+            'Rosaceae': { color: '#F1948A', icon: '🌹' }, // Soft Red
+            'Salicaceae': { color: '#BFC9CA', icon: '🎐' }, // Silver Grey
+            'Malvaceae': { color: '#FADBD8', icon: '🍬' }, // Pale Pink
+            'Zingiberaceae': { color: '#F5B041', icon: '🍠' }, // Ginger Gold
+            'Amaryllidaceae': { color: '#D7BDE2', icon: '🧄' }, // Pale Purple
+            'Apiaceae': { color: '#AF7AC5', icon: '☠️' }, // Toxic Purple
+            'Adoxaceae': { color: '#5B2C6F', icon: '🫐' }, // Deep Berry
+            'Papaveraceae': { color: '#EC7063', icon: '🥀' } // Poppy Red
+        };
+
+        // Fallback theme
+        const defaultTheme = { color: '#aaccff', icon: '🪴' };
+
+        // --- INITIALIZATION ---
+        function init() {
+            populateFilters();
+            // Generate initial batch of plants
+            generateBatch();
+            // Initialize first level view
+            updateLevelState();
+        }
+
+        function populateFilters() {
+            // Helper to populate a select element
+            const fillSelect = (id, values) => {
+                const select = document.getElementById(id);
+                // Keep the first "All" option
+                select.innerHTML = `<option value="All">${select.options[0].text}</option>`;
+                values.sort().forEach(val => {
+                    if (!val) return;
+                    const option = document.createElement('option');
+                    option.value = val;
+                    option.textContent = val;
+                    select.appendChild(option);
+                });
+            };
+
+            // Extract unique values
+            const families = [...new Set(plantDatabase.map(p => p.family))];
+            // Some plants might not have habitat defined in the new JS structure if I missed it, but they should.
+            // Wait, the new JS structure I saw earlier didn't have 'habitat' explicitly in the snippet I read?
+            // Ah, looking at 'lavender' in the read_file output:
+            // { id: 'lavender', ..., energetics: {...}, latinBreakdown: [...], commonNameHint: "...", image: "..." }
+            // It seems 'habitat' might be missing from the new structure or I missed it.
+            // Let's assume it might be missing and handle it gracefully, or check if I need to add it back.
+            // Actually, looking at the previous `plants.js` (before the user seemingly updated it or I read a different version), it had habitat.
+            // The `read_file` output I got in step 2 shows lines 1-442.
+            // Let's look at 'lavender' again in that output.
+            // Line 14: `energetics: { temperature: 'Cool', moisture: 'Dry', element: 'Air' },`
+            // Line 15: `latinBreakdown: ...`
+            // It does NOT have `habitat`!
+            // The user's request says "add filters of habitat... and also the filter in the specimen collection."
+            // And "I want a filter that I can select combinations of family, energetics and region for example."
+            // "Region" usually means Habitat.
+            // Since the data seems to be missing 'habitat' in the new structure, I should probably try to infer it or just use what's there.
+            // Wait, the previous version had it. The user might have replaced the file content with a version that has energetics but lost habitat?
+            // Or maybe it's further down?
+            // I will check if any plant has habitat.
+            
+            const habitats = [...new Set(plantDatabase.map(p => p.habitat).filter(Boolean))];
+            
+            // Actions - flatten the arrays
+            const allActions = plantDatabase.reduce((acc, p) => {
+                if (p.actions) return acc.concat(p.actions);
+                return acc;
+            }, []);
+            const uniqueActions = [...new Set(allActions)];
+
+            // Energetics
+            const temps = [...new Set(plantDatabase.map(p => p.energetics?.temperature).filter(Boolean))];
+            const moists = [...new Set(plantDatabase.map(p => p.energetics?.moisture).filter(Boolean))];
+            const elements = [...new Set(plantDatabase.map(p => p.energetics?.element).filter(Boolean))];
+
+            fillSelect('filter-family', families);
+            fillSelect('filter-habitat', habitats);
+            fillSelect('filter-action', uniqueActions);
+            fillSelect('filter-temp', temps);
+            fillSelect('filter-moist', moists);
+            fillSelect('filter-element', elements);
+        }
+
+        function updateFilter(type, value) {
+            activeFilters[type] = value;
+            updateLevelState();
+            setTimeout(fitToScreen, 50);
+        }
+
+        function clearFilters() {
+            activeFilters = {
+                family: 'All',
+                habitat: 'All',
+                action: 'All',
+                temp: 'All',
+                moist: 'All',
+                element: 'All'
+            };
+            
+            // Reset UI
+            document.getElementById('filter-family').value = 'All';
+            document.getElementById('filter-habitat').value = 'All';
+            document.getElementById('filter-action').value = 'All';
+            document.getElementById('filter-temp').value = 'All';
+            document.getElementById('filter-moist').value = 'All';
+            document.getElementById('filter-element').value = 'All';
+
+            updateLevelState();
+            setTimeout(fitToScreen, 50);
+        }
+
+        function checkFilters(plant) {
+            // Always show collected plants (they appear as gray)
+            const collectedInLevel = levelState[currentLevel].collected;
+            if (collectedInLevel.has(plant.id)) return true;
+            
+            if (activeFilters.family !== 'All' && plant.family !== activeFilters.family) return false;
+            if (activeFilters.habitat !== 'All' && plant.habitat !== activeFilters.habitat) return false;
+            
+            if (activeFilters.action !== 'All') {
+                if (!plant.actions || !plant.actions.includes(activeFilters.action)) return false;
+            }
+
+            if (activeFilters.temp !== 'All' && plant.energetics?.temperature !== activeFilters.temp) return false;
+            if (activeFilters.moist !== 'All' && plant.energetics?.moisture !== activeFilters.moist) return false;
+            if (activeFilters.element !== 'All' && plant.energetics?.element !== activeFilters.element) return false;
+
+            return true;
+        }
+
+        function generateBatch() {
+            // Select ALL plants for this session to ensure we see everything
+            // We shuffle just to vary the order if needed, but we want the full set.
+            const shuffled = [...plantDatabase].sort(() => Math.random() - 0.5);
+            currentBatch = shuffled.map(plant => {
+                // Apply family theme color
+                const theme = familyThemes[plant.family] || defaultTheme;
+                
+                return {
+                    plant: plant,
+                    theme: theme,
+                    // x/y will be calculated in renderBatch
+                    delay: Math.random() * 2
+                };
+            });
+        }
+
+        // Get cluster key based on current mode
+        function getClusterKey(plant) {
+            switch(clusterMode) {
+                case 'family': return plant.family || 'Unknown';
+                case 'habitat': return plant.habitat || 'Unknown';
+                case 'action': return (plant.actions && plant.actions[0]) || 'Unknown';
+                case 'element': return plant.energetics?.element || 'Unknown';
+                case 'temperature': return plant.energetics?.temperature || 'Unknown';
+                case 'moisture': return plant.energetics?.moisture || 'Unknown';
+                default: return plant.family || 'Unknown';
+            }
+        }
+
+        // Get theme for cluster - generate unique color for each category
+        function getClusterTheme(key, plant, clusterIndex) {
+            // Predefined color palette with distinct, visually pleasing colors
+            const colorPalette = [
+                '#E74C3C', // Red
+                '#3498DB', // Blue
+                '#27AE60', // Green
+                '#9B59B6', // Purple
+                '#F39C12', // Orange
+                '#1ABC9C', // Teal
+                '#E91E63', // Pink
+                '#8BC34A', // Light Green
+                '#FF5722', // Deep Orange
+                '#00BCD4', // Cyan
+                '#673AB7', // Deep Purple
+                '#CDDC39', // Lime
+                '#795548', // Brown
+                '#607D8B', // Blue Grey
+                '#FF9800', // Amber
+                '#4CAF50', // Medium Green
+                '#2196F3', // Light Blue
+                '#9C27B0', // Violet
+                '#FFC107', // Yellow
+                '#00ACC1', // Dark Cyan
+                '#8D6E63', // Warm Brown
+                '#78909C', // Cool Grey
+                '#FF7043', // Coral
+                '#66BB6A', // Soft Green
+                '#5C6BC0', // Indigo
+                '#26A69A', // Aqua
+                '#EC407A', // Rose
+                '#AB47BC', // Orchid
+                '#7E57C2', // Lavender
+                '#42A5F5', // Sky Blue
+            ];
+            
+            // Use the cluster index to pick a unique color
+            const color = colorPalette[clusterIndex % colorPalette.length];
+            return { color: color, icon: '' };
+        }
+
+        function renderBatch() {
+            const container = document.getElementById('orb-container');
+            const svgLayer = document.getElementById('connection-layer');
+            container.innerHTML = '';
+            if (svgLayer) svgLayer.innerHTML = '';
+            currentOrbs = [];
+
+            const collectedInLevel = levelState[currentLevel].collected;
+            
+            // 1. Group plants by current cluster mode
+            const clusterGroups = {};
+            let visibleCount = 0;
+
+            currentBatch.forEach(item => {
+                if (!checkFilters(item.plant)) return;
+                visibleCount++;
+                
+                const key = getClusterKey(item.plant);
+                if (!clusterGroups[key]) clusterGroups[key] = [];
+                clusterGroups[key].push(item);
+            });
+
+            // 2. Calculate all positions using force-directed layout
+            const clusters = Object.keys(clusterGroups).sort((a, b) => clusterGroups[b].length - clusterGroups[a].length);
+            const totalPlants = visibleCount;
+            
+            // Store all node positions for collision detection
+            const allNodes = [];
+            const nodeRadius = 1.0; // % units
+            
+            // First, place all plants using a global spiral, then push clusters apart
+            let globalIndex = 0;
+            const goldenAngle = 2.39996;
+            
+            clusters.forEach((clusterKey, clusterIndex) => {
+                const group = clusterGroups[clusterKey];
+                const theme = getClusterTheme(clusterKey, group[0].plant, clusterIndex);
+                
+                // Calculate cluster center using spiral for organic distribution
+                let clusterCenterX, clusterCenterY;
+                if (clusterIndex === 0) {
+                    clusterCenterX = 50;
+                    clusterCenterY = 50;
+                } else {
+                    // Spiral placement based on cluster size
+                    const clusterSpacing = 8 + Math.sqrt(group.length) * 1.5;
+                    const angle = clusterIndex * goldenAngle;
+                    const r = clusterSpacing * Math.sqrt(clusterIndex);
+                    clusterCenterX = 50 + r * Math.cos(angle);
+                    clusterCenterY = 50 + r * Math.sin(angle);
+                }
+                
+                // Calculate positions for plants in this cluster
+                const plantPositions = [];
+                
+                group.forEach((item, i) => {
+                    let px, py;
+                    if (i === 0) {
+                        px = clusterCenterX;
+                        py = clusterCenterY;
+                    } else {
+                        // Tight spiral within cluster
+                        const angle = i * goldenAngle;
+                        const r = nodeRadius * 2.5 * Math.sqrt(i);
+                        px = clusterCenterX + r * Math.cos(angle);
+                        py = clusterCenterY + r * Math.sin(angle);
+                    }
+                    
+                    plantPositions.push({ x: px, y: py, item: item, theme: theme, clusterKey: clusterKey });
+                    allNodes.push({ x: px, y: py, clusterKey: clusterKey, clusterCenter: { x: clusterCenterX, y: clusterCenterY } });
+                });
+                
+                // Store for connection drawing and label placement
+                clusterGroups[clusterKey].positions = plantPositions;
+                clusterGroups[clusterKey].center = { x: clusterCenterX, y: clusterCenterY };
+                clusterGroups[clusterKey].theme = theme;
+            });
+            
+            // Force-directed collision resolution
+            for (let iter = 0; iter < 80; iter++) {
+                for (let i = 0; i < allNodes.length; i++) {
+                    for (let j = i + 1; j < allNodes.length; j++) {
+                        const dx = allNodes[j].x - allNodes[i].x;
+                        const dy = allNodes[j].y - allNodes[i].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const minDist = nodeRadius * 2.8;
+                        
+                        if (dist < minDist && dist > 0) {
+                            const push = (minDist - dist) / 2;
+                            const nx = dx / dist;
+                            const ny = dy / dist;
+                            
+                            // Push nodes apart
+                            allNodes[i].x -= nx * push * 0.6;
+                            allNodes[i].y -= ny * push * 0.6;
+                            allNodes[j].x += nx * push * 0.6;
+                            allNodes[j].y += ny * push * 0.6;
+                        }
+                    }
+                    
+                    // Gentle pull towards cluster center to keep groups together
+                    const node = allNodes[i];
+                    const pullStrength = 0.02;
+                    node.x += (node.clusterCenter.x - node.x) * pullStrength;
+                    node.y += (node.clusterCenter.y - node.y) * pullStrength;
+                }
+            }
+            
+            // Calculate actual cluster centers after force resolution
+            clusters.forEach((clusterKey) => {
+                const group = clusterGroups[clusterKey];
+                let sumX = 0, sumY = 0, count = 0;
+                
+                allNodes.forEach(node => {
+                    if (node.clusterKey === clusterKey) {
+                        sumX += node.x;
+                        sumY += node.y;
+                        count++;
+                    }
+                });
+                
+                if (count > 0) {
+                    clusterGroups[clusterKey].actualCenter = { x: sumX / count, y: sumY / count };
+                }
+            });
+            
+            // Now render everything
+            let nodeIndex = 0;
+            clusters.forEach((clusterKey) => {
+                const group = clusterGroups[clusterKey];
+                const positions = group.positions;
+                const theme = group.theme;
+                const actualCenter = group.actualCenter || group.center;
+                
+                // Create Cluster Label (text only, bigger)
+                const rootNode = document.createElement('div');
+                rootNode.className = 'cluster-label';
+                rootNode.style.left = `calc(${actualCenter.x}% - 125px)`;
+                rootNode.style.top = `calc(${actualCenter.y}% - 40px)`;
+                rootNode.style.color = theme.color;
+                rootNode.textContent = clusterKey;
+                container.appendChild(rootNode);
+                
+                // Draw connections within cluster
+                if (svgLayer && positions.length > 1) {
+                    for (let i = 0; i < positions.length; i++) {
+                        const node = allNodes[nodeIndex + i];
+                        const distances = [];
+                        for (let j = 0; j < positions.length; j++) {
+                            if (i !== j) {
+                                const other = allNodes[nodeIndex + j];
+                                const d = Math.sqrt((node.x - other.x) ** 2 + (node.y - other.y) ** 2);
+                                distances.push({ idx: j, dist: d });
+                            }
+                        }
+                        distances.sort((a, b) => a.dist - b.dist);
+                        
+                        // Connect to 2 nearest neighbors
+                        const connectCount = Math.min(2, distances.length);
+                        for (let c = 0; c < connectCount; c++) {
+                            const other = allNodes[nodeIndex + distances[c].idx];
+                            if (i < distances[c].idx) {
+                                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                                line.setAttribute('x1', `${node.x}%`);
+                                line.setAttribute('y1', `${node.y}%`);
+                                line.setAttribute('x2', `${other.x}%`);
+                                line.setAttribute('y2', `${other.y}%`);
+                                line.setAttribute('stroke', theme.color);
+                                line.setAttribute('stroke-width', '1.5');
+                                line.setAttribute('opacity', '0.35');
+                                line.setAttribute('class', 'connection-line');
+                                svgLayer.appendChild(line);
+                            }
+                        }
+                    }
+                }
+                
+                // Render orbs
+                positions.forEach((pos, i) => {
+                    const node = allNodes[nodeIndex + i];
+                    const plant = pos.item.plant;
+                    const isCollected = collectedInLevel.has(plant.id);
+                    
+                    const orb = document.createElement('div');
+                    orb.className = 'orb';
+                    if (isCollected) orb.classList.add('collected');
+                    
+                    if (!isCollected) {
+                        orb.style.backgroundColor = theme.color;
+                        orb.style.boxShadow = `0 0 8px ${theme.color}55`;
+                    }
+                    orb.style.left = `calc(${node.x}% - 14px)`;
+                    orb.style.top = `calc(${node.y}% - 14px)`;
+                    
+                    if (isCollected) {
+                        orb.innerHTML = `<span style="font-size:0.9rem; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-weight: bold;">✓</span>`;
+                    }
+                    
+                    orb.onclick = () => {
+                        if (!isCollected) openCard(plant);
+                    };
+                    
+                    // Add thumbnail on hover
+                    orb.onmouseenter = (e) => {
+                        showOrbThumbnail(plant, orb);
+                    };
+                    orb.onmouseleave = () => {
+                        hideOrbThumbnail();
+                    };
+                    
+                    container.appendChild(orb);
+                    
+                    currentOrbs.push({ element: orb, plant: plant });
+                });
+                
+                nodeIndex += positions.length;
+            });
+
+            // Handle empty state
+            const hasActiveFilters = Object.values(activeFilters).some(v => v !== 'All');
+            if (visibleCount === 0) {
+                 if (collectedInLevel.size === plantDatabase.length) {
+                    document.getElementById('start-message').innerHTML = `
+                        <h2>✧ All specimens collected! ✧</h2>
+                        <button class="btn-transmute" onclick="resetGame()">Begin Anew</button>
+                    `;
+                 } else if (currentBatch.length === 0) {
+                    generateBatch();
+                    renderBatch();
+                    return;
+                 } else if (hasActiveFilters) {
+                    document.getElementById('start-message').innerHTML = `<h2>✧ No specimens found ✧</h2>`;
+                 }
+                 document.getElementById('start-message').style.display = 'block';
+            } else {
+                document.getElementById('start-message').style.display = 'none';
+            }
+        }
+
+        // Removed drawConnections as it is now integrated into renderBatch
+        // function drawConnections(groups, svg) { ... }
+
+        function setLevel(level) {
+            currentLevel = level;
+            updateLevelState();
+        }
+
+        function updateLevelState() {
+            // Update buttons
+            document.querySelectorAll('.level-btn').forEach((btn, index) => {
+                btn.classList.toggle('active', index + 1 === currentLevel);
+            });
+
+            // Update score
+            document.getElementById('score').textContent = `${levelState[currentLevel].score} / ${plantDatabase.length}`;
+
+            // Rebuild shelf
+            const shelf = document.getElementById('shelf-container');
+            shelf.innerHTML = '';
+            levelState[currentLevel].collected.forEach(plantId => {
+                const plant = plantDatabase.find(p => p.id === plantId);
+                if (plant) {
+                    if (checkFilters(plant)) {
+                        addToShelf(plant);
+                    }
+                }
+            });
+
+            // Reset view
+            if (currentPlant) {
+                closeCard();
+            }
+            
+            renderBatch();
+        }
+
+        function openCard(plant) {
+            currentPlant = plant;
+            document.getElementById('start-message').style.display = 'none';
+            document.getElementById('card-overlay').classList.remove('journal-mode');
+            document.getElementById('card-overlay').style.display = 'flex';
+            document.getElementById('void-stage').style.filter = 'blur(5px)';
+            
+            // Use local photo for examination, fallback to remote
+            const img = document.getElementById('card-image');
+            img.onerror = function() { 
+                this.src = plant.image; 
+                this.onerror = null; 
+            };
+            img.src = `images_database/${plant.id}/main.jpg`;
+
+            document.getElementById('guess-input').value = "";
+            
+            // Reset to game mode
+            document.getElementById('game-interface').style.display = 'block';
+            document.getElementById('level-indicator').style.display = 'block';
+            document.getElementById('collection-info').style.display = 'none';
+
+            updateCardForLevel();
+            document.getElementById('guess-input').focus();
+        }
+
+        function viewCollectionCard(plant) {
+            document.getElementById('start-message').style.display = 'none';
+            document.getElementById('card-overlay').classList.add('journal-mode');
+            document.getElementById('card-overlay').style.display = 'flex';
+            document.getElementById('void-stage').style.filter = 'blur(5px)';
+            
+            // Use local illustration for collection journal, fallback to photo, then remote
+            const img = document.getElementById('card-image');
+            img.onerror = function() {
+                // Fallback 1: Try local photo
+                this.src = `images_database/${plant.id}/main.jpg`;
+                this.onerror = function() {
+                    // Fallback 2: Try remote URL
+                    this.src = plant.image;
+                    this.onerror = null;
+                };
+            };
+            img.src = `images_database/${plant.id}/main.jpg`;
+
+            // Hide game controls, show info
+            document.getElementById('game-interface').style.display = 'none';
+            document.getElementById('level-indicator').style.display = 'none';
+            
+            const theme = familyThemes[plant.family] || defaultTheme;
+
+            // Find related plants in collection (for current level)
+            const collectedInLevel = levelState[currentLevel].collected;
+            const related = plantDatabase.filter(p => 
+                p.family === plant.family && 
+                collectedInLevel.has(p.id) && 
+                p.id !== plant.id
+            );
+
+            let relatedHtml = '';
+            if (related.length > 0) {
+                relatedHtml = `
+                    <div style="margin-top: 15px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 10px;">
+                        <div style="font-size: 0.8em; margin-bottom: 5px; opacity: 0.7;">Also in ${plant.family}:</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            ${related.map(p => `
+                                <span onclick="viewCollectionCard(plantDatabase.find(x => x.id === '${p.id}'))" 
+                                      style="cursor: pointer; color: ${theme.color}; text-decoration: underline; font-size: 0.9em;">
+                                    ${p.commonName}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Handle missing fields gracefully
+            const uses = plant.uses ? plant.uses.join(', ') : (plant.actions ? plant.actions.join(', ') : 'Unknown');
+            const habitat = plant.habitat || 'Unknown';
+            const etymology = plant.etymology || plant.commonNameHint || 'No etymology available.';
+            
+            // Format energetics if available
+            let energeticsHtml = '';
+            if (plant.energetics) {
+                energeticsHtml = `
+                    <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 6px; font-size: 0.85rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span><strong>Temp:</strong> ${plant.energetics.temperature || '?'}</span>
+                            <span><strong>Moist:</strong> ${plant.energetics.moisture || '?'}</span>
+                        </div>
+                        <div><strong>Element:</strong> ${plant.energetics.element || '?'}</div>
+                    </div>
+                `;
+            }
+
+            // Format Latin Breakdown if available
+            let latinBreakdownHtml = '';
+            if (plant.latinBreakdown && plant.latinBreakdown.length > 0) {
+                 latinBreakdownHtml = `
+                    <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.4); border-radius: 6px; font-size: 0.9rem;">
+                        <div style="font-weight: bold; margin-bottom: 5px; opacity: 0.8;">Latin Breakdown:</div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            ${plant.latinBreakdown.map(item => `<div><i>${item.word}</i>: ${item.meaning}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            const infoDiv = document.getElementById('collection-info');
+            infoDiv.style.display = 'block';
+            
+            // Build multilingual names display
+            const namesHtml = `
+                <div style="margin-bottom: 15px; text-align: center;">
+                    <div style="font-size: 1.3rem; margin-bottom: 8px;">
+                        🇬🇧 <strong>${plant.commonName}</strong>
+                    </div>
+                    ${plant.commonName_FR ? `<div style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 4px;">🇫🇷 ${plant.commonName_FR}</div>` : ''}
+                    ${plant.commonName_ES ? `<div style="font-size: 1.1rem; opacity: 0.9;">🇪🇸 ${plant.commonName_ES}</div>` : ''}
+                </div>
+            `;
+            
+            infoDiv.innerHTML = `
+                <h2 style="color: var(--accent-color); margin: 0 0 5px 0; text-align: center;">
+                    <span style="margin-right: 8px;">${theme.icon}</span>${plant.commonName}
+                </h2>
+                <div style="font-style: italic; margin-bottom: 10px; text-align: center;">${plant.latinName}</div>
+                ${namesHtml}
+                
+                <div style="font-size: 0.95rem; line-height: 1.6; background: rgba(255,255,255,0.5); padding: 15px; border-radius: 8px;">
+                    <p style="margin: 5px 0;"><strong>Family:</strong> <span style="color:${theme.color}; font-weight:bold;">${plant.family}</span></p>
+                    <p style="margin: 5px 0;"><strong>Habitat:</strong> ${habitat}</p>
+                    ${energeticsHtml}
+                    ${latinBreakdownHtml}
+                    <p style="margin: 5px 0;"><strong>Actions/Uses:</strong> ${uses}</p>
+                    <p style="margin: 5px 0;"><strong>Lore/Etymology:</strong> ${etymology}</p>
+                    ${relatedHtml}
+                </div>
+                
+                <button onclick="closeCard()" class="btn-transmute" style="width:100%; margin-top: 20px;">Close Journal</button>
+            `;
+        }
+
+        function updateCardForLevel() {
+            const level = levels[currentLevel];
+            document.getElementById('level-indicator').textContent = `Level ${currentLevel}: ${level.name}`;
+            document.getElementById('clue-text').innerHTML = level.getClue(currentPlant);
+            document.getElementById('ai-hint').innerHTML = level.getHint(currentPlant);
+            document.getElementById('guess-input').placeholder = level.placeholder;
+        }
+
+        function checkGuess() {
+            const userGuess = document.getElementById('guess-input').value.toLowerCase().trim();
+            const level = levels[currentLevel];
+            const correctAnswers = level.getAnswer(currentPlant);
+
+            // Check if guess matches any of the correct answers
+            let isCorrect = false;
+            for (const answer of correctAnswers) {
+                if (checkAnswer(userGuess, answer.toLowerCase())) {
+                    isCorrect = true;
+                    break;
+                }
+            }
+
+            if (isCorrect) {
+                // SUCCESS
+                levelState[currentLevel].score++;
+                document.getElementById('score').textContent = `${levelState[currentLevel].score} / ${plantDatabase.length}`;
+                levelState[currentLevel].collected.add(currentPlant.id);
+                addToShelf(currentPlant);
+                
+                // Save progress
+                saveProgress();
+                
+                // Mark orb as collected
+                const orbData = currentOrbs.find(o => o.plant.id === currentPlant.id);
+                if (orbData) {
+                    orbData.element.classList.add('collected');
+                }
+
+                document.getElementById('exam-card').classList.add('success-flash');
+                setTimeout(() => {
+                    document.getElementById('exam-card').classList.remove('success-flash');
+                    closeCard();
+                    
+                    // Check if we need more orbs
+                    // If we cleared the current batch (visible ones), renderBatch will handle regeneration
+                    const remainingOrbs = currentOrbs.filter(o => !o.element.classList.contains('collected'));
+                    if (remainingOrbs.length === 0) {
+                        renderBatch();
+                    }
+                }, 500);
+
+            } else {
+                document.getElementById('ai-hint').innerHTML += "<br><span style='color:#ff6b6b; font-size:0.9em;'>The essence is cloudy... try again.</span>";
+                document.getElementById('guess-input').select();
+            }
+        }
+
+        function checkAnswer(guess, correct) {
+            // Normalize both strings
+            guess = guess.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+            correct = correct.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+
+            // Exact match
+            if (guess === correct) return true;
+
+            // Check if guess contains the main parts of correct answer
+            const correctWords = correct.split(' ');
+            const guessWords = guess.split(' ');
+
+            // For Latin names, check genus (first word) or full match
+            if (currentLevel === 2) {
+                // Check if they got the genus right
+                if (correctWords[0] && guessWords.includes(correctWords[0])) return true;
+                // Or if guess is contained in correct
+                if (correct.includes(guess) && guess.length > 3) return true;
+            }
+
+            // For common names, be a bit flexible
+            if (currentLevel === 1 || currentLevel === 3) {
+                // Check if main word matches
+                for (let word of correctWords) {
+                    if (word.length > 3 && guessWords.includes(word)) return true;
+                }
+                // Check if guess is contained in correct or vice versa
+                if (correct.includes(guess) && guess.length > 3) return true;
+                if (guess.includes(correct) && correct.length > 3) return true;
+            }
+
+            return false;
+        }
+
+        function skipPlant() {
+            const names = [currentPlant.commonName];
+            if (currentPlant.commonName_FR) names.push(currentPlant.commonName_FR);
+            if (currentPlant.commonName_ES) names.push(currentPlant.commonName_ES);
+            document.getElementById('ai-hint').innerHTML += `<br><span style='color:#ffd700; font-size:0.9em;'>The answer was: <b>${names.join(' / ')}</b><br>(${currentPlant.latinName})</span>`;
+            setTimeout(() => {
+                closeCard();
+            }, 2000);
+        }
+
+        function addToShelf(plant) {
+            const shelf = document.getElementById('shelf-container');
+            const div = document.createElement('div');
+            div.className = 'potted-plant';
+            div.style.cursor = 'pointer';
+            div.onclick = () => viewCollectionCard(plant);
+            
+            const theme = familyThemes[plant.family] || defaultTheme;
+            
+            div.innerHTML = `
+                <span class="pot-icon" style="filter: drop-shadow(0 0 5px ${theme.color});">${theme.icon}</span> 
+                <div>
+                    <div style="font-size: 0.85rem;">${plant.commonName}</div>
+                    <div style="font-size: 0.7em; opacity: 0.6; font-style: italic;">${plant.latinName}</div>
+                    <div style="font-size: 0.65em; opacity: 0.5; color: ${theme.color}; font-weight: bold;">${plant.family}</div>
+                </div>`;
+            shelf.appendChild(div);
+        }
+
+        function closeCard() {
+            document.getElementById('card-overlay').style.display = 'none';
+            document.getElementById('void-stage').style.filter = 'none';
+            document.getElementById('start-message').style.display = 'block';
+            currentPlant = null;
+        }
+
+        function handleOverlayClick(event) {
+            // Only close if clicking directly on the overlay, not on the card
+            if (event.target.id === 'card-overlay') {
+                closeCard();
+            }
+        }
+
+        function resetGame() {
+            levelState[currentLevel].collected.clear();
+            levelState[currentLevel].score = 0;
+            document.getElementById('score').textContent = `0 / ${plantDatabase.length}`;
+            document.getElementById('shelf-container').innerHTML = '';
+            document.getElementById('start-message').innerHTML = `
+                <h2>✧ Click an orb to begin your examination ✧</h2>
+                <p>Identify the specimens to add them to your collection</p>
+            `;
+            generateBatch();
+            renderBatch();
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") closeCard();
+            if (event.key === "Enter" && document.getElementById('card-overlay').style.display === 'flex') checkGuess();
+        });
+
+        // --- PANNING & ZOOMING LOGIC ---
+        const voidStage = document.getElementById('void-stage');
+        const worldContainer = document.getElementById('world-container');
+        
+        let isDragging = false;
+        let startX, startY;
+        
+        // Initial State
+        let scale = 0.8; // Start closer
+        let currentX = -750 + (window.innerWidth / 2); // Center of 1500px world
+        let currentY = -750 + (window.innerHeight / 2);
+
+        function updateTransform() {
+            worldContainer.style.transform = `translate(${currentX}px, ${currentY}px) scale(${scale})`;
+        }
+
+        // Initialize position
+        updateTransform();
+
+        // Panning
+        voidStage.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.orb') || e.target.closest('.family-root')) return; 
+            isDragging = true;
+            startX = e.clientX - currentX;
+            startY = e.clientY - currentY;
+            voidStage.style.cursor = 'grabbing';
+            // Temporarily disable transition for instant dragging response
+            worldContainer.style.transition = 'none';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            currentX = e.clientX - startX;
+            currentY = e.clientY - startY;
+            updateTransform();
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                voidStage.style.cursor = 'grab';
+                // Re-enable transition for smooth zoom
+                worldContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.57, 0.1, 1)';
+            }
+        });
+
+        // Zooming
+        voidStage.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomSpeed = 0.08; // Slower steps for smoothness
+            const delta = -Math.sign(e.deltaY);
+            const newScale = scale + (delta * zoomSpeed);
+            
+            // Clamp scale
+            scale = Math.min(Math.max(newScale, 0.3), 3.0);
+            updateTransform();
+        });
+
+        // Zoom button functions
+        function zoomIn() {
+            scale = Math.min(scale + 0.15, 3.0);
+            updateTransform();
+        }
+
+        function zoomOut() {
+            scale = Math.max(scale - 0.15, 0.3);
+            updateTransform();
+        }
+
+        function fitToScreen() {
+            // Get actual bounds of content
+            const orbs = container.querySelectorAll('.orb');
+            const labels = container.querySelectorAll('.cluster-label');
+            
+            if (orbs.length === 0) {
+                // No orbs, just center
+                const stageRect = voidStage.getBoundingClientRect();
+                scale = 0.8;
+                currentX = (stageRect.width - 1500 * scale) / 2;
+                currentY = (stageRect.height - 1500 * scale) / 2;
+                updateTransform();
+                return;
+            }
+            
+            // Find bounding box of all orbs (in percentage of 1500px world)
+            let minX = 100, maxX = 0, minY = 100, maxY = 0;
+            orbs.forEach(orb => {
+                // Parse the left/top from calc(X% - 14px)
+                const leftMatch = orb.style.left.match(/calc\(([\d.]+)%/);
+                const topMatch = orb.style.top.match(/calc\(([\d.]+)%/);
+                if (leftMatch && topMatch) {
+                    const x = parseFloat(leftMatch[1]);
+                    const y = parseFloat(topMatch[1]);
+                    minX = Math.min(minX, x);
+                    maxX = Math.max(maxX, x);
+                    minY = Math.min(minY, y);
+                    maxY = Math.max(maxY, y);
+                }
+            });
+            
+            // Add padding (in %)
+            const padding = 10;
+            minX = Math.max(0, minX - padding);
+            maxX = Math.min(100, maxX + padding);
+            minY = Math.max(0, minY - padding);
+            maxY = Math.min(100, maxY + padding);
+            
+            // Convert to pixels (world is 1500px)
+            const worldSize = 1500;
+            const contentLeft = (minX / 100) * worldSize;
+            const contentTop = (minY / 100) * worldSize;
+            const contentWidth = ((maxX - minX) / 100) * worldSize;
+            const contentHeight = ((maxY - minY) / 100) * worldSize;
+            const contentCenterX = contentLeft + contentWidth / 2;
+            const contentCenterY = contentTop + contentHeight / 2;
+            
+            // Calculate scale to fit content
+            const stageRect = voidStage.getBoundingClientRect();
+            const stagePadding = 80;
+            const scaleX = (stageRect.width - stagePadding) / contentWidth;
+            const scaleY = (stageRect.height - stagePadding) / contentHeight;
+            
+            scale = Math.min(scaleX, scaleY, 1.5); // Cap at 1.5x zoom
+            scale = Math.max(scale, 0.3); // Min 0.3x
+            
+            // Center the content in the viewport
+            currentX = (stageRect.width / 2) - (contentCenterX * scale);
+            currentY = (stageRect.height / 2) - (contentCenterY * scale);
+            
+            updateTransform();
+        }
+
+        // Set cluster mode and re-render
+        function setClusterMode(mode) {
+            clusterMode = mode;
+            renderBatch();
+            // Small delay to let DOM update before fitting
+            setTimeout(fitToScreen, 50);
+        }
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            // Optional: Recenter or adjust?
+        });
+
+        // Don't auto-init - wait for login
+        // The login functions will call init() after authentication
+        
+        // Handle Enter key on login input
+        document.getElementById('username-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') loginUser();
+        });
+    </script>
+</body>
+</html>
