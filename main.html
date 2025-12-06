@@ -837,8 +837,10 @@
     <script src="plants.js"></script>
     <script>
         // --- API CONFIGURATION ---
-        // Change this to your Railway URL after deployment
-        const API_URL = localStorage.getItem('apothecary_api_url') || '';
+        // Auto-detect: use localhost if running local server, otherwise Railway
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000'  // Local development
+            : 'https://germinarium-production.up.railway.app';  // Production
         
         // --- USER STATE ---
         let currentUser = null; // { username: 'alex' } or null for guest
